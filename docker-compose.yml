@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+  worker:
+    build:
+      context: worker
+    volumes:
+      - "./worker/:/app"
+  grpcs:
+    build:
+      context: grpcs
+    volumes:
+      - "./grpcs/:/app"
+  api:
+    build:
+      context: api
+    volumes:
+      - "./api/:/app"
+    ports:
+      - "${API_ACCESS_PORT}:${API_ACCESS_PORT}"
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+  
