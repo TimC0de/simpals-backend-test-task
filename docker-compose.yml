@@ -1,18 +1,26 @@
 version: '3.7'
 services:
   worker:
+    env_file:
+      - .env
     build:
       context: worker
     volumes:
       - "./worker/:/app"
   grpcs:
+    env_file:
+        - .env
     build:
       context: grpcs
     volumes:
       - "./grpcs/:/app"
   api:
+    env_file:
+      - .env
     build:
       context: api
+      args:
+        - API_ACCESS_PORT=${API_ACCESS_PORT}
     volumes:
       - "./api/:/app"
     ports:
