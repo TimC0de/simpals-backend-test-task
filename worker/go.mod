@@ -1,4 +1,4 @@
-module test/worker
+module github.com/TimC0de/simpals-backend-test-task/worker
 
 go 1.21
 
