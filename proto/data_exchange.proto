@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option go_package = "test/grpc/interface/data_exchange";
+
+package data_exchange;
+
+service GrpcService {
+    rpc UploadData (stream Document) returns (Status) {}
+    rpc GetData (Pagination) returns (stream Document) {}
+}
+
+message Document {
+    string id = 1;
+    Categories categories = 2;
+    Title title = 3;
+    string type = 4;
+    float posted = 5;
+}
+
+message Categories {
+    string subcategory = 1;
+}
+
+message Title {
+    string ro = 1;
+    string ru = 2;
+}
+
+message Status {
+    bool succeded = 1;
+}
+
+message Pagination {
+    int32 limit = 1;
+    int32 page = 2;
+}
