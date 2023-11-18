@@ -1,10 +1,11 @@
-module test/grpcs
+module github.com/TimC0de/simpals-backend-test-task/grpcs
 
 go 1.21
 
 require (
 	github.com/elastic/elastic-transport-go/v8 v8.3.0 // indirect
 	github.com/elastic/go-elasticsearch/v8 v8.11.0 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	golang.org/x/net v0.14.0 // indirect
