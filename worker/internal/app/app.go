@@ -35,9 +35,10 @@ func (a *App) waitableWorkerRun(wg *sync.WaitGroup) {
 
 func (a *App) Run() {
 	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	a.waitableWorkerRun(&wg)
 	a.source.StartFulfilling()
-	wg.Wait()
 }
 
 func (a *App) Deinitialize() {
