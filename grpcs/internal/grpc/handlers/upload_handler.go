@@ -1,4 +1,4 @@
-package grpc
+package handlers
 
 import (
 	"io"
@@ -7,23 +7,23 @@ import (
 	pb "github.com/TimC0de/simpals-backend-test-task/grpcs/internal/grpc/data_exchange"
 )
 
-type HandlerImplInterface interface {
+type UploadHandlerInterface interface {
 	GetChannel() *chan *pb.Document
 
-	pb.GrpcServiceServer
+	pb.UploadServiceServer
 }
 
-type GrpcHandlerImpl struct {
+type UploadHandler struct {
 	Source chan *pb.Document
 
-	pb.UnimplementedGrpcServiceServer
+	pb.UnimplementedUploadServiceServer
 }
 
-func (servImpl *GrpcHandlerImpl) Initialize() {
+func (servImpl *UploadHandler) Initialize() {
 	servImpl.Source = make(chan *pb.Document)
 }
 
-func (servImpl *GrpcHandlerImpl) UploadData(uploader pb.GrpcService_UploadDataServer) error {
+func (servImpl *UploadHandler) UploadData(uploader pb.UploadService_UploadDataServer) error {
 	for {
 		document, err := uploader.Recv()
 		if err == io.EOF {
@@ -32,7 +32,6 @@ func (servImpl *GrpcHandlerImpl) UploadData(uploader pb.GrpcService_UploadDataSe
 		}
 
 		for err != nil {
-			close(servImpl.Source)
 			log.Printf("Failed to receive document: %v", err)
 			return err
 		}
@@ -41,12 +40,12 @@ func (servImpl *GrpcHandlerImpl) UploadData(uploader pb.GrpcService_UploadDataSe
 	}
 }
 
-func (servImpl *GrpcHandlerImpl) GetChannel() *chan *pb.Document {
+func (servImpl *UploadHandler) GetChannel() *chan *pb.Document {
 	return &servImpl.Source
 }
 
-func NewGrpcHandlerImpl() *GrpcHandlerImpl {
-	handler := new(GrpcHandlerImpl)
+func NewUploadHandler() *UploadHandler {
+	handler := new(UploadHandler)
 	handler.Initialize()
 	return handler
 }

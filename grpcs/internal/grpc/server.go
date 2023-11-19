@@ -6,18 +6,25 @@ import (
 	"net"
 
 	pb "github.com/TimC0de/simpals-backend-test-task/grpcs/internal/grpc/data_exchange"
+	"github.com/TimC0de/simpals-backend-test-task/grpcs/internal/grpc/handlers"
 	"google.golang.org/grpc"
 )
 
 type GrpcServer struct {
-	port       string
-	listener   net.Listener
-	ServerImpl HandlerImplInterface
+	port          string
+	listener      net.Listener
+	UploadHandler handlers.UploadHandlerInterface
+	FetchHandler  handlers.FetchHandlerInterface
 }
 
-func (serv *GrpcServer) Initialize(serverPort string, impl HandlerImplInterface) {
+func (serv *GrpcServer) Initialize(
+	serverPort string,
+	uploadHdl handlers.UploadHandlerInterface,
+	fetchHdl handlers.FetchHandlerInterface,
+) {
 	serv.port = serverPort
-	serv.ServerImpl = impl
+	serv.UploadHandler = uploadHdl
+	serv.FetchHandler = fetchHdl
 }
 
 func (serv *GrpcServer) Run() {
@@ -28,18 +35,27 @@ func (serv *GrpcServer) Run() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterGrpcServiceServer(s, serv.ServerImpl)
+	pb.RegisterUploadServiceServer(s, serv.UploadHandler)
 	if err := s.Serve(serv.listener); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
+		log.Fatalf("Failed to register upload handler: %v", err)
+	}
+
+	pb.RegisterFetchServiceServer(s, serv.FetchHandler)
+	if err := s.Serve(serv.listener); err != nil {
+		log.Fatalf("Failed to register fetch handler: %v", err)
 	}
 }
 
-func (serv *GrpcServer) GetChannel() *chan *pb.Document {
-	return serv.ServerImpl.GetChannel()
+func (serv *GrpcServer) GetUploadChannel() *chan *pb.Document {
+	return serv.UploadHandler.GetChannel()
 }
 
-func NewGrpcServer(serverPort string, impl HandlerImplInterface) *GrpcServer {
+func NewGrpcServer(
+	serverPort string,
+	uploadHdl handlers.UploadHandlerInterface,
+	fetchHdl handlers.FetchHandlerInterface,
+) *GrpcServer {
 	server := new(GrpcServer)
-	server.Initialize(serverPort, impl)
+	server.Initialize(serverPort, uploadHdl, fetchHdl)
 	return server
 }

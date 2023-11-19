@@ -18,46 +18,45 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// GrpcServiceClient is the client API for GrpcService service.
+// UploadServiceClient is the client API for UploadService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type GrpcServiceClient interface {
-	UploadData(ctx context.Context, opts ...grpc.CallOption) (GrpcService_UploadDataClient, error)
-	GetData(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (GrpcService_GetDataClient, error)
+type UploadServiceClient interface {
+	UploadData(ctx context.Context, opts ...grpc.CallOption) (UploadService_UploadDataClient, error)
 }
 
-type grpcServiceClient struct {
+type uploadServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGrpcServiceClient(cc grpc.ClientConnInterface) GrpcServiceClient {
-	return &grpcServiceClient{cc}
+func NewUploadServiceClient(cc grpc.ClientConnInterface) UploadServiceClient {
+	return &uploadServiceClient{cc}
 }
 
-func (c *grpcServiceClient) UploadData(ctx context.Context, opts ...grpc.CallOption) (GrpcService_UploadDataClient, error) {
-	stream, err := c.cc.NewStream(ctx, &GrpcService_ServiceDesc.Streams[0], "/data_exchange.GrpcService/UploadData", opts...)
+func (c *uploadServiceClient) UploadData(ctx context.Context, opts ...grpc.CallOption) (UploadService_UploadDataClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UploadService_ServiceDesc.Streams[0], "/data_exchange.UploadService/UploadData", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpcServiceUploadDataClient{stream}
+	x := &uploadServiceUploadDataClient{stream}
 	return x, nil
 }
 
-type GrpcService_UploadDataClient interface {
+type UploadService_UploadDataClient interface {
 	Send(*Document) error
 	CloseAndRecv() (*Status, error)
 	grpc.ClientStream
 }
 
-type grpcServiceUploadDataClient struct {
+type uploadServiceUploadDataClient struct {
 	grpc.ClientStream
 }
 
-func (x *grpcServiceUploadDataClient) Send(m *Document) error {
+func (x *uploadServiceUploadDataClient) Send(m *Document) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *grpcServiceUploadDataClient) CloseAndRecv() (*Status, error) {
+func (x *uploadServiceUploadDataClient) CloseAndRecv() (*Status, error) {
 	if err := x.ClientStream.CloseSend(); err != nil {
 		return nil, err
 	}
@@ -68,12 +67,100 @@ func (x *grpcServiceUploadDataClient) CloseAndRecv() (*Status, error) {
 	return m, nil
 }
 
-func (c *grpcServiceClient) GetData(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (GrpcService_GetDataClient, error) {
-	stream, err := c.cc.NewStream(ctx, &GrpcService_ServiceDesc.Streams[1], "/data_exchange.GrpcService/GetData", opts...)
+// UploadServiceServer is the server API for UploadService service.
+// All implementations must embed UnimplementedUploadServiceServer
+// for forward compatibility
+type UploadServiceServer interface {
+	UploadData(UploadService_UploadDataServer) error
+	mustEmbedUnimplementedUploadServiceServer()
+}
+
+// UnimplementedUploadServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedUploadServiceServer struct {
+}
+
+func (UnimplementedUploadServiceServer) UploadData(UploadService_UploadDataServer) error {
+	return status.Errorf(codes.Unimplemented, "method UploadData not implemented")
+}
+func (UnimplementedUploadServiceServer) mustEmbedUnimplementedUploadServiceServer() {}
+
+// UnsafeUploadServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UploadServiceServer will
+// result in compilation errors.
+type UnsafeUploadServiceServer interface {
+	mustEmbedUnimplementedUploadServiceServer()
+}
+
+func RegisterUploadServiceServer(s grpc.ServiceRegistrar, srv UploadServiceServer) {
+	s.RegisterService(&UploadService_ServiceDesc, srv)
+}
+
+func _UploadService_UploadData_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(UploadServiceServer).UploadData(&uploadServiceUploadDataServer{stream})
+}
+
+type UploadService_UploadDataServer interface {
+	SendAndClose(*Status) error
+	Recv() (*Document, error)
+	grpc.ServerStream
+}
+
+type uploadServiceUploadDataServer struct {
+	grpc.ServerStream
+}
+
+func (x *uploadServiceUploadDataServer) SendAndClose(m *Status) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *uploadServiceUploadDataServer) Recv() (*Document, error) {
+	m := new(Document)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// UploadService_ServiceDesc is the grpc.ServiceDesc for UploadService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var UploadService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "data_exchange.UploadService",
+	HandlerType: (*UploadServiceServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "UploadData",
+			Handler:       _UploadService_UploadData_Handler,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "data_exchange.proto",
+}
+
+// FetchServiceClient is the client API for FetchService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type FetchServiceClient interface {
+	GetDocuments(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (FetchService_GetDocumentsClient, error)
+	TitleSearch(ctx context.Context, in *TitleFilter, opts ...grpc.CallOption) (FetchService_TitleSearchClient, error)
+	SubcategoryDocumentAmount(ctx context.Context, in *Categories, opts ...grpc.CallOption) (*DocumentAmount, error)
+}
+
+type fetchServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewFetchServiceClient(cc grpc.ClientConnInterface) FetchServiceClient {
+	return &fetchServiceClient{cc}
+}
+
+func (c *fetchServiceClient) GetDocuments(ctx context.Context, in *Pagination, opts ...grpc.CallOption) (FetchService_GetDocumentsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &FetchService_ServiceDesc.Streams[0], "/data_exchange.FetchService/GetDocuments", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpcServiceGetDataClient{stream}
+	x := &fetchServiceGetDocumentsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -83,16 +170,16 @@ func (c *grpcServiceClient) GetData(ctx context.Context, in *Pagination, opts ..
 	return x, nil
 }
 
-type GrpcService_GetDataClient interface {
+type FetchService_GetDocumentsClient interface {
 	Recv() (*Document, error)
 	grpc.ClientStream
 }
 
-type grpcServiceGetDataClient struct {
+type fetchServiceGetDocumentsClient struct {
 	grpc.ClientStream
 }
 
-func (x *grpcServiceGetDataClient) Recv() (*Document, error) {
+func (x *fetchServiceGetDocumentsClient) Recv() (*Document, error) {
 	m := new(Document)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -100,101 +187,164 @@ func (x *grpcServiceGetDataClient) Recv() (*Document, error) {
 	return m, nil
 }
 
-// GrpcServiceServer is the server API for GrpcService service.
-// All implementations must embed UnimplementedGrpcServiceServer
-// for forward compatibility
-type GrpcServiceServer interface {
-	UploadData(GrpcService_UploadDataServer) error
-	GetData(*Pagination, GrpcService_GetDataServer) error
-	mustEmbedUnimplementedGrpcServiceServer()
+func (c *fetchServiceClient) TitleSearch(ctx context.Context, in *TitleFilter, opts ...grpc.CallOption) (FetchService_TitleSearchClient, error) {
+	stream, err := c.cc.NewStream(ctx, &FetchService_ServiceDesc.Streams[1], "/data_exchange.FetchService/TitleSearch", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &fetchServiceTitleSearchClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-// UnimplementedGrpcServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedGrpcServiceServer struct {
-}
-
-func (UnimplementedGrpcServiceServer) UploadData(GrpcService_UploadDataServer) error {
-	return status.Errorf(codes.Unimplemented, "method UploadData not implemented")
-}
-func (UnimplementedGrpcServiceServer) GetData(*Pagination, GrpcService_GetDataServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetData not implemented")
-}
-func (UnimplementedGrpcServiceServer) mustEmbedUnimplementedGrpcServiceServer() {}
-
-// UnsafeGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GrpcServiceServer will
-// result in compilation errors.
-type UnsafeGrpcServiceServer interface {
-	mustEmbedUnimplementedGrpcServiceServer()
-}
-
-func RegisterGrpcServiceServer(s grpc.ServiceRegistrar, srv GrpcServiceServer) {
-	s.RegisterService(&GrpcService_ServiceDesc, srv)
-}
-
-func _GrpcService_UploadData_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GrpcServiceServer).UploadData(&grpcServiceUploadDataServer{stream})
-}
-
-type GrpcService_UploadDataServer interface {
-	SendAndClose(*Status) error
+type FetchService_TitleSearchClient interface {
 	Recv() (*Document, error)
-	grpc.ServerStream
+	grpc.ClientStream
 }
 
-type grpcServiceUploadDataServer struct {
-	grpc.ServerStream
+type fetchServiceTitleSearchClient struct {
+	grpc.ClientStream
 }
 
-func (x *grpcServiceUploadDataServer) SendAndClose(m *Status) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *grpcServiceUploadDataServer) Recv() (*Document, error) {
+func (x *fetchServiceTitleSearchClient) Recv() (*Document, error) {
 	m := new(Document)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func _GrpcService_GetData_Handler(srv interface{}, stream grpc.ServerStream) error {
+func (c *fetchServiceClient) SubcategoryDocumentAmount(ctx context.Context, in *Categories, opts ...grpc.CallOption) (*DocumentAmount, error) {
+	out := new(DocumentAmount)
+	err := c.cc.Invoke(ctx, "/data_exchange.FetchService/SubcategoryDocumentAmount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// FetchServiceServer is the server API for FetchService service.
+// All implementations must embed UnimplementedFetchServiceServer
+// for forward compatibility
+type FetchServiceServer interface {
+	GetDocuments(*Pagination, FetchService_GetDocumentsServer) error
+	TitleSearch(*TitleFilter, FetchService_TitleSearchServer) error
+	SubcategoryDocumentAmount(context.Context, *Categories) (*DocumentAmount, error)
+	mustEmbedUnimplementedFetchServiceServer()
+}
+
+// UnimplementedFetchServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedFetchServiceServer struct {
+}
+
+func (UnimplementedFetchServiceServer) GetDocuments(*Pagination, FetchService_GetDocumentsServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetDocuments not implemented")
+}
+func (UnimplementedFetchServiceServer) TitleSearch(*TitleFilter, FetchService_TitleSearchServer) error {
+	return status.Errorf(codes.Unimplemented, "method TitleSearch not implemented")
+}
+func (UnimplementedFetchServiceServer) SubcategoryDocumentAmount(context.Context, *Categories) (*DocumentAmount, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubcategoryDocumentAmount not implemented")
+}
+func (UnimplementedFetchServiceServer) mustEmbedUnimplementedFetchServiceServer() {}
+
+// UnsafeFetchServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to FetchServiceServer will
+// result in compilation errors.
+type UnsafeFetchServiceServer interface {
+	mustEmbedUnimplementedFetchServiceServer()
+}
+
+func RegisterFetchServiceServer(s grpc.ServiceRegistrar, srv FetchServiceServer) {
+	s.RegisterService(&FetchService_ServiceDesc, srv)
+}
+
+func _FetchService_GetDocuments_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(Pagination)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(GrpcServiceServer).GetData(m, &grpcServiceGetDataServer{stream})
+	return srv.(FetchServiceServer).GetDocuments(m, &fetchServiceGetDocumentsServer{stream})
 }
 
-type GrpcService_GetDataServer interface {
+type FetchService_GetDocumentsServer interface {
 	Send(*Document) error
 	grpc.ServerStream
 }
 
-type grpcServiceGetDataServer struct {
+type fetchServiceGetDocumentsServer struct {
 	grpc.ServerStream
 }
 
-func (x *grpcServiceGetDataServer) Send(m *Document) error {
+func (x *fetchServiceGetDocumentsServer) Send(m *Document) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-// GrpcService_ServiceDesc is the grpc.ServiceDesc for GrpcService service.
+func _FetchService_TitleSearch_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(TitleFilter)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(FetchServiceServer).TitleSearch(m, &fetchServiceTitleSearchServer{stream})
+}
+
+type FetchService_TitleSearchServer interface {
+	Send(*Document) error
+	grpc.ServerStream
+}
+
+type fetchServiceTitleSearchServer struct {
+	grpc.ServerStream
+}
+
+func (x *fetchServiceTitleSearchServer) Send(m *Document) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _FetchService_SubcategoryDocumentAmount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Categories)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FetchServiceServer).SubcategoryDocumentAmount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/data_exchange.FetchService/SubcategoryDocumentAmount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FetchServiceServer).SubcategoryDocumentAmount(ctx, req.(*Categories))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// FetchService_ServiceDesc is the grpc.ServiceDesc for FetchService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var GrpcService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "data_exchange.GrpcService",
-	HandlerType: (*GrpcServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+var FetchService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "data_exchange.FetchService",
+	HandlerType: (*FetchServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SubcategoryDocumentAmount",
+			Handler:    _FetchService_SubcategoryDocumentAmount_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "UploadData",
-			Handler:       _GrpcService_UploadData_Handler,
-			ClientStreams: true,
+			StreamName:    "GetDocuments",
+			Handler:       _FetchService_GetDocuments_Handler,
+			ServerStreams: true,
 		},
 		{
-			StreamName:    "GetData",
-			Handler:       _GrpcService_GetData_Handler,
+			StreamName:    "TitleSearch",
+			Handler:       _FetchService_TitleSearch_Handler,
 			ServerStreams: true,
 		},
 	},

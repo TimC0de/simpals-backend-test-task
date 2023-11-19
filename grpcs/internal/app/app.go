@@ -7,6 +7,7 @@ import (
 	"github.com/TimC0de/simpals-backend-test-task/grpcs/internal/elastic"
 	"github.com/TimC0de/simpals-backend-test-task/grpcs/internal/environment"
 	"github.com/TimC0de/simpals-backend-test-task/grpcs/internal/grpc"
+	"github.com/TimC0de/simpals-backend-test-task/grpcs/internal/grpc/handlers"
 	"github.com/TimC0de/simpals-backend-test-task/grpcs/internal/worker"
 )
 
@@ -28,10 +29,10 @@ type App struct {
 func (a *App) Initialize(ctx context.Context) {
 	a.environment = environment.NewEnvironment(kEnvVariables[:])
 
-	handlerImpl := grpc.NewGrpcHandlerImpl()
 	a.server = grpc.NewGrpcServer(
 		a.environment.GetVal("GRPC_SERVICE_ACCESS_PORT"),
-		handlerImpl,
+		handlers.NewUploadHandler(),
+		handlers.NewFetchHandler(),
 	)
 
 	a.uploader = elastic.NewElasticSearchClient(
@@ -39,7 +40,7 @@ func (a *App) Initialize(ctx context.Context) {
 		ctx,
 		a.environment.GetVal("ELASTIC_SERVICE_URL"),
 	)
-	a.worker = worker.NewWorker(a.server.GetChannel(), a.uploader)
+	a.worker = worker.NewWorker(a.server.GetUploadChannel(), a.uploader)
 
 	log.Printf("gRPC Service is up and running...")
 }
