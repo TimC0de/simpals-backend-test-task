@@ -12,7 +12,7 @@ import (
 type GrpcClient struct {
 	Valid      bool
 	Connection *grpc.ClientConn
-	Client     pb.GrpcServiceClient
+	Client     pb.UploadServiceClient
 }
 
 func (gc *GrpcClient) initializeConnection(serverLocation string) {
@@ -27,7 +27,7 @@ func (gc *GrpcClient) initializeConnection(serverLocation string) {
 
 func (gc *GrpcClient) Initialize(serverLocation string) {
 	gc.initializeConnection(serverLocation)
-	gc.Client = pb.NewGrpcServiceClient(gc.Connection)
+	gc.Client = pb.NewUploadServiceClient(gc.Connection)
 }
 
 func (gc *GrpcClient) Close() {

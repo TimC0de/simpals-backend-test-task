@@ -16,7 +16,7 @@ type StreamUploader interface {
 
 type GrpcDocumentUploader struct {
 	GrpcClient *grpc.GrpcClient
-	Streamer   pb.GrpcService_UploadDataClient
+	Streamer   pb.UploadService_UploadDataClient
 
 	StreamUploader
 }
