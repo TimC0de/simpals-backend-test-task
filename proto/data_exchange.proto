@@ -4,11 +4,6 @@ option go_package = "test/grpc/interface/data_exchange";
 
 package data_exchange;
 
-service GrpcService {
-    rpc UploadData (stream Document) returns (Status) {}
-    rpc GetData (Pagination) returns (stream Document) {}
-}
-
 message Document {
     string id = 1;
     Categories categories = 2;
@@ -26,11 +21,38 @@ message Title {
     string ru = 2;
 }
 
+//
+// gRPC Upload Service definition
+//
+
+service UploadService {
+    rpc UploadData (stream Document) returns (Status) {}
+}
+
 message Status {
     bool succeded = 1;
+}
+
+//
+// gRPC Fetch Service definition
+//
+
+service FetchService {
+    rpc GetDocuments (Pagination) returns (stream Document) {}
+    rpc TitleSearch (TitleFilter) returns (stream Document) {}
+    rpc SubcategoryDocumentAmount (Categories) returns (DocumentAmount) {}
 }
 
 message Pagination {
     int32 limit = 1;
     int32 page = 2;
+}
+
+message TitleFilter {
+    string subtext = 1;
+    string language = 2;
+}
+
+message DocumentAmount {
+    int32 amount = 1;
 }
