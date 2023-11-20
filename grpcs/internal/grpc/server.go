@@ -46,10 +46,6 @@ func (serv *GrpcServer) Run() {
 	}
 }
 
-func (serv *GrpcServer) GetUploadChannel() *chan *pb.Document {
-	return serv.UploadHandler.GetChannel()
-}
-
 func NewGrpcServer(
 	serverPort string,
 	uploadHdl handlers.UploadHandlerInterface,

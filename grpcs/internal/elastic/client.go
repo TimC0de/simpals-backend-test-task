@@ -18,6 +18,10 @@ type ElasticSearchClient struct {
 	Client    *elasticsearch.Client
 }
 
+type ElasticFilter interface {
+	GetFilter() string
+}
+
 func (esClient *ElasticSearchClient) initializeClient(dsUrl string) {
 	cfg := elasticsearch.Config{
 		Addresses: []string{dsUrl},
@@ -75,6 +79,72 @@ func (esClient *ElasticSearchClient) Upload(document *pb.Document) {
 	} else {
 		log.Printf("Document successfully added: %s", document.Id)
 	}
+}
+
+func (esClient *ElasticSearchClient) decodeJson(decoder *json.Decoder) *map[string]interface{} {
+	decoded := new(map[string]interface{})
+	if err := decoder.Decode(decoded); err != nil {
+		log.Printf("Failed to decode Document: %v", err)
+		return nil
+	}
+	return decoded
+}
+
+func (esClient *ElasticSearchClient) decodeDocuments(decoder *json.Decoder) []*pb.Document {
+	jsonResult := esClient.decodeJson(decoder)
+	for _, hit := range (*jsonResult)["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		source := hit.(map[string]interface{})["_source"]
+		marshaledSource, _ := json.Marshal(source)
+		log.Printf("Marshaled _source from Elastic response: %s", marshaledSource)
+
+		// TODO: Finish implementing documents parsing
+	}
+
+	return nil
+}
+
+func (esClient *ElasticSearchClient) Fetch(pagination *pb.Pagination) []*pb.Document {
+	from := int((pagination.Page - 1) * pagination.Limit)
+	size := int(pagination.Limit)
+
+	result, err := esapi.SearchRequest{
+		Index: []string{esClient.IndexName},
+		From:  &from,
+		Size:  &size,
+	}.Do(esClient.Context, esClient.Client)
+
+	if err != nil {
+		log.Printf("Failed to fetch documents: %v", err)
+		return nil
+	}
+	return esClient.decodeDocuments(json.NewDecoder(result.Body))
+}
+
+func (esClient *ElasticSearchClient) Filter(filter ElasticFilter) []*pb.Document {
+	result, err := esapi.SearchRequest{
+		Index: []string{esClient.IndexName},
+		Query: filter.GetFilter(),
+	}.Do(esClient.Context, esClient.Client)
+
+	if err != nil {
+		log.Printf("Failed to search for documents by filter '%s': %v", filter.GetFilter(), err)
+		return nil
+	}
+	return esClient.decodeDocuments(json.NewDecoder(result.Body))
+}
+
+func (esClient *ElasticSearchClient) Count(filter ElasticFilter) int32 {
+	result, err := esapi.CountRequest{
+		Index: []string{esClient.IndexName},
+		Query: filter.GetFilter(),
+	}.Do(esClient.Context, esClient.Client)
+
+	if err != nil {
+		log.Printf("Failed to count documents by filter '%s': %v", filter.GetFilter(), err)
+		return 0
+	}
+	decodedResult := esClient.decodeJson(json.NewDecoder(result.Body))
+	return (*decodedResult)["count"].(int32)
 }
 
 func NewElasticSearchClient(indexName string, ctx context.Context, dsUrl string) *ElasticSearchClient {

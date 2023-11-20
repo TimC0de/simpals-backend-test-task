@@ -10,6 +10,5 @@ func main() {
 	ctx := context.Background()
 
 	a := app.NewApp(ctx)
-	defer a.Deinitialize()
 	a.Run()
 }
