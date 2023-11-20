@@ -1,0 +1,22 @@
+type Document {
+    Id: String!
+    Categories: Categories
+    Title: Title
+    Type: String
+    Posted: Float
+}
+
+type Categories {
+    Subcategory: String
+}
+
+type Title {
+    Ro: String
+    Ru: String
+}
+
+type Query {
+    documents(limit: Int, offset: Int): [Document]
+    titleSearch(subtext: String, language: String): [Document]
+    subcategoryDocumentsAmount(subcategory: String) [Int]
+}
